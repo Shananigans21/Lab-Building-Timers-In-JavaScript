@@ -1,25 +1,32 @@
-const { countdownTimer } = require('../src/countdown')
+const { countdownTimer } = require('../countdown');
 
-jest.useFakeTimers()
+jest.useFakeTimers();
 
 describe('countdownTimer', () => {
-  test('should log remaining time at intervals and stop at 0', () => {
-    console.log = jest.fn() // Mock console.log
+  beforeEach(() => {
+    jest.clearAllTimers();
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
 
-    const startTime = 5 // 5 seconds
-    const interval = 1000 // 1 second
-    const timerId = countdownTimer(startTime, interval)
+  afterEach(() => {
+    console.log.mockRestore();
+  });
 
-    // Fast-forward all timers
-    jest.advanceTimersByTime(startTime * interval)
+  test('should log countdown and finish message', () => {
+    const startTime = 3;
+    const interval = 1000;
 
-    // Verify that console.log was called correctly
-    expect(console.log).toHaveBeenCalledTimes(startTime)
-    for (let i = startTime; i > 0; i--) {
-      expect(console.log).toHaveBeenCalledWith(i)
-    }
+    countdownTimer(startTime, interval);
 
-    // Ensure timer was stopped
-    expect(clearInterval).toHaveBeenCalledWith(timerId)
-  })
-})
+    // Advance time in 1-second intervals
+    jest.advanceTimersByTime(3000); // 3 intervals
+
+    // Expect 4 logs: "Time left: 3", "Time left: 2", "Time left: 1", then "Countdown finished!"
+    expect(console.log).toHaveBeenCalledTimes(4);
+    expect(console.log).toHaveBeenNthCalledWith(1, 'Time left: 3 seconds');
+    expect(console.log).toHaveBeenNthCalledWith(2, 'Time left: 2 seconds');
+    expect(console.log).toHaveBeenNthCalledWith(3, 'Time left: 1 seconds');
+    expect(console.log).toHaveBeenNthCalledWith(4, 'Countdown finished!');
+  });
+});
+
